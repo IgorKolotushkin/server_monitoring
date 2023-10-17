@@ -1,0 +1,93 @@
+version: '3.9'
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    depends_on:
+      - loki
+    networks:
+      - backend
+    volumes:
+      - 'grafana_storage:/var/lib/grafana'
+
+  promtail:
+    image: grafana/promtail
+    container_name: promtail
+    restart: unless-stopped
+    expose:
+      - 9080
+    ports:
+      - "9080:9080"
+    volumes:
+      - /var/log:/var/log:ro
+      - promtail_data:/var/lib/promtail/positions
+      - ./promtail/promtail.yaml:/etc/promtail/promtail.yaml
+    command:
+      - '-config.file=/etc/promtail/promtail.yaml'
+    networks:
+      - backend
+
+  loki:
+    image: grafana/loki
+    container_name: loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki/loki-config.yaml:/etc/loki-config.yaml
+      - loki_data:/tmp/loki/
+    networks:
+      - backend
+
+  prometheus:
+      image: prom/prometheus:latest
+      volumes:
+        - "prometheus_data:/etc/prometheus/"
+        - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml
+      container_name: prometheus
+      hostname: prometheus
+      command:
+        - --config.file=/etc/prometheus/prometheus.yaml
+      ports:
+        - 9090:9090
+      restart: unless-stopped
+      environment:
+        TZ: "Europe/Moscow"
+      networks:
+        - backend
+
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    container_name: exporter
+    hostname: exporter
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --collector.filesystem.ignored-mount-points
+      - ^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|>
+    ports:
+      - 9100:9100
+    restart: unless-stopped
+    environment:
+      TZ: "Europe/Moscow"
+    networks:
+      - backend
+
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  grafana_storage: {}
+  promtail_data: {}
+  loki_data: {}
+  prometheus_data: {}
