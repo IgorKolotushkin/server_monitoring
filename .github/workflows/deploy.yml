@@ -15,5 +15,7 @@ jobs:
     runs-on: self-hosted
     # needs: prepare-environment
     steps:
+      - name: ls
+        run: ls
       - name: docker-compose
         run: docker-compose up --build -d
