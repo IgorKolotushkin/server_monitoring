@@ -23,6 +23,7 @@ services:
       - "9080:9080"
     volumes:
       - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - promtail_data:/var/lib/promtail/positions
       - ./promtail/promtail.yaml:/etc/promtail/promtail.yaml
     command:
@@ -43,22 +44,21 @@ services:
       - backend
 
   prometheus:
-      image: prom/prometheus:latest
-      volumes:
-        - "prometheus_data:/etc/prometheus/"
-        - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml
-      container_name: prometheus
-      hostname: prometheus
-      command:
-        - --config.file=/etc/prometheus/prometheus.yaml
-      ports:
-        - 9090:9090
-      restart: unless-stopped
-      environment:
-        TZ: "Europe/Moscow"
-      networks:
-        - backend
-
+    image: prom/prometheus:latest
+    volumes:
+      - "prometheus_data:/etc/prometheus/"
+      - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml
+    container_name: prometheus
+    hostname: prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yaml
+    ports:
+      - 9090:9090
+    restart: unless-stopped
+    environment:
+      TZ: "Europe/Moscow"
+    networks:
+      - backend
 
   node-exporter:
     image: prom/node-exporter:latest
@@ -72,7 +72,7 @@ services:
       - --path.procfs=/host/proc
       - --path.sysfs=/host/sys
       - --collector.filesystem.ignored-mount-points
-      - ^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|>
+      - ^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)
     ports:
       - 9100:9100
     restart: unless-stopped
