@@ -18,4 +18,4 @@ jobs:
       - name: clone
         run: git clone https://github.com/IgorKolotushkin/server_monitoring.git
       - name: docker-compose
-        run: cd HabrBot && docker-compose up --build -d
+        run: cd server_monitoring && docker-compose up --build -d
