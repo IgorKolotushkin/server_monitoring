@@ -41,3 +41,4 @@ scrape_configs:
     - labels:
         image_name:
         container_name:
+
